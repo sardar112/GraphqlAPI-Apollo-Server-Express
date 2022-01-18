@@ -3,17 +3,30 @@ const jwt = require('jsonwebtoken');
 const { combineResolvers } = require('graphql-resolvers');
 
 const User = require('../models/userModel');
+const Task = require('../models/taskModel');
+
 const { isAuthenticated } = require('./middleware/authMiddleware');
 
 module.exports = {
   Query: {
-    greetings: () => 'Hellow world',
-    users: combineResolvers(isAuthenticated, (_, { id }, { userId }) => {
-      return 'users';
-    }),
+    users: combineResolvers(
+      isAuthenticated,
+      async (parent, args, { userId }, info) => {
+        try {
+          const user = await User.findById(userId);
+          if (!user) {
+            throw new Error('User not found');
+          }
+          return user;
+        } catch (error) {
+          throw error;
+        }
+      }
+    ),
   },
+
   Mutation: {
-    signUp: async (_, { input }, contex, info) => {
+    signUp: async (parent, { input }, contex, info) => {
       try {
         const user = await User.findOne({ email });
         if (user) {
@@ -27,6 +40,7 @@ module.exports = {
         throw new Error(error);
       }
     },
+
     login: async (_, { input }, contex, info) => {
       try {
         const user = await User.findOne({ email });
@@ -50,8 +64,15 @@ module.exports = {
       }
     },
   },
+
   User: {
-    task: (parent, args, contex, info) =>
-      users.filter((task) => task.userid === parent.id),
+    tasks: async (parent, args, contex, info) => {
+      try {
+        const tasks = await Task.find({ user: parent.id });
+        return tasks;
+      } catch (error) {
+        throw error;
+      }
+    },
   },
 };

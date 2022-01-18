@@ -17,42 +17,6 @@ connection();
 //For body parser
 app.use(express.json());
 
-const typeDefs = gql`
-  type Query {
-    greetings: String!
-    tasks: [Task!]
-    task(id: ID!): Task
-    users: [User!]
-    user(id: ID!): User
-  }
-
-  type Mutation {
-    createTask(input: createTaskInput!): Task
-  }
-
-  type User {
-    id: ID!
-    name: String!
-    email: String!
-    task: [Task!]
-  }
-
-  type Task {
-    id: ID!
-    name: String!
-    email: String!
-    completed: Boolean!
-    user: User!
-  }
-
-  input createTaskInput {
-    name: String!
-    email: String!
-    completed: Boolean!
-    userId: ID!
-  }
-`;
-
 const apolloServer = new ApolloServer({
   typeDefs,
   resolvers,
