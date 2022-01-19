@@ -1,12 +1,14 @@
 const express = require('express');
-const { ApolloServer, gql } = require('apollo-server-express');
 const cors = require('cors');
 const dotEnv = require('dotenv');
+const DataLoader = require('dataloader');
+
 const resolvers = require('./resolvers');
 const typeDefs = require('./typeDefs');
 const { connection } = require('./utils/util');
 const { verifyUser } = require('./helper/context');
-
+const userLoaders = require('./loaders/loaderIndex');
+const formatError = require('./helper/formatError');
 dotEnv.config({ path: '.env' });
 
 const app = express();
@@ -17,6 +19,7 @@ connection();
 //For body parser
 app.use(express.json());
 
+// const UserLoaders = new DataLoader((keys) => userLoaders.user.batchUsers(keys)); //implementing catche assign this to user
 const apolloServer = new ApolloServer({
   typeDefs,
   resolvers,
@@ -24,8 +27,12 @@ const apolloServer = new ApolloServer({
     await verifyUser(req);
     return {
       userId: req.id,
+      loaders: {
+        user: new DataLoader((keys) => userLoaders.user.batchUsers(keys)),
+      },
     };
   },
+  formatError,
 });
 
 apolloServer.applyMiddleware({ app, path: '/graphql' });

@@ -9,7 +9,7 @@ module.exports.connection = async () => {
     console.log('connection established');
   } catch (error) {
     console.log('connection failed', error);
-    throw error;
+    throw new Error(error.message);
   }
 };
 

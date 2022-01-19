@@ -1,6 +1,10 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { combineResolvers } = require('graphql-resolvers');
+const {
+  UserInputError,
+  AuthenticationError,
+} = require('apollo-server-express');
 
 const User = require('../models/userModel');
 const Task = require('../models/taskModel');
@@ -15,7 +19,7 @@ module.exports = {
         try {
           const user = await User.findById(userId);
           if (!user) {
-            throw new Error('User not found');
+            throw new ApolloError('User not found', 'NOT_FOUND');
           }
           return user;
         } catch (error) {
@@ -30,14 +34,14 @@ module.exports = {
       try {
         const user = await User.findOne({ email });
         if (user) {
-          throw new Error(`User  with this email already exists`);
+          throw new ApolloError('Email Already In Use', 'DUPLICATE');
         }
         const hashedPassword = await bcrypt.hash(input.password, 12);
         const newUser = await User.create(...input, password, hashedPassword);
         return newUser;
       } catch (error) {
         console.log(error);
-        throw new Error(error);
+        throw error;
       }
     },
 
@@ -45,14 +49,14 @@ module.exports = {
       try {
         const user = await User.findOne({ email });
         if (!user) {
-          throw new Error(`User  with this email does not exists`);
+          throw new ApolloError('User not found', 'NOT_FOUND');
         }
         const isValidPassword = await bcrypt.compare(
           input.password,
           user.password
         );
         if (!isValidPassword) {
-          throw new Error(`Incorrect password`);
+          throw new AuthenticationError('Incorrect Password');
         }
         const token = jwt.sign({ id: user_id }, process.env.JWT_SECRET, {
           expiresIn: '90d',
@@ -60,7 +64,7 @@ module.exports = {
         return { token };
       } catch (error) {
         console.log(error);
-        throw new Error(error);
+        throw error;
       }
     },
   },

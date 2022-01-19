@@ -1,4 +1,5 @@
 const { combineResolvers } = require('graphql-resolvers');
+const { AuthenticationError } = require('apollo-server-express');
 
 const Task = require('../models/taskModel');
 const { isAuthenticated, isTaskOwner } = require('./middleware/authMiddleware');
@@ -95,9 +96,11 @@ module.exports = {
   },
 
   Task: {
-    user: async (parent, { input }, { userId }, info) => {
+    user: async (parent, { input }, { userId, loaders }, info) => {
       try {
-        const user = await User.findById(parent.user);
+        // const user = await User.findById(parent.user);
+        //converting object id into string
+        const user = await loaders.user.load(parent.user.toString());
         return user;
       } catch (error) {
         throw error;
