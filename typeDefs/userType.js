@@ -6,15 +6,15 @@ module.exports = gql`
     user(id: ID!): User
   }
 
-  extend type Mutation {
+  type Mutation {
     signUp(input: signUpInput!): User
     login(input: loginInput!): Token
   }
 
-  type {
+  type Token {
     token: String!
   }
-  
+
   type User {
     id: ID!
     name: String!

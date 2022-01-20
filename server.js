@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const dotEnv = require('dotenv');
+const { ApolloServer } = require('apollo-server-express');
 const DataLoader = require('dataloader');
 
 const resolvers = require('./resolvers');
@@ -23,7 +24,7 @@ app.use(express.json());
 const apolloServer = new ApolloServer({
   typeDefs,
   resolvers,
-  contex: async ({ req }) => {
+  context: async ({ req }) => {
     await verifyUser(req);
     return {
       userId: req.id,
@@ -35,8 +36,11 @@ const apolloServer = new ApolloServer({
   formatError,
 });
 
-apolloServer.applyMiddleware({ app, path: '/graphql' });
-
+async function startServer() {
+  await apolloServer.start();
+  apolloServer.applyMiddleware({ app, path: '/graphql' });
+}
+startServer();
 const PORT = process.env.PORT || 3000;
 
 app.use('/', (req, res, next) => {
