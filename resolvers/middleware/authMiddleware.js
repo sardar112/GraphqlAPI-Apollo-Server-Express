@@ -6,7 +6,7 @@ const Task = require('./../../models/taskModel');
 
 module.exports.isAuthenticated = (parent, args, { userId }, info) => {
   if (!userId) {
-    throw new ForbiddenError('Access denied, please login');
+    throw new ForbiddenError('Access denied, please login first');
   }
   return skip;
 };
@@ -21,7 +21,7 @@ module.exports.isTaskOwner = async (parent, { input }, { userId }, info) => {
       throw new ForbiddenError('Your are not Authorized to access this task');
     }
     return skip;
-  } catch (err) {
-    throw err;
+  } catch (error) {
+    throw new Error(error);
   }
 };

@@ -11,7 +11,7 @@ module.exports.verifyUser = async (req) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.id = decoded.id;
     }
-  } catch (err) {
+  } catch (error) {
     throw new AuthenticationError('Invalid Token or Expired', err);
   }
 };

@@ -13,24 +13,21 @@ const { isAuthenticated } = require('./middleware/authMiddleware');
 
 module.exports = {
   Query: {
-    users: combineResolvers(
-      isAuthenticated,
-      async (parent, args, { userId }, info) => {
-        try {
-          const user = await User.findById(userId);
-          if (!user) {
-            throw new ApolloError('User not found', 'NOT_FOUND');
-          }
-          return user;
-        } catch (error) {
-          throw error;
+    users: combineResolvers(isAuthenticated, async (_, __, { userId }) => {
+      try {
+        const user = await User.findById(userId);
+        if (!user) {
+          throw new ApolloError('User not found', 'NOT_FOUND');
         }
+        return user;
+      } catch (error) {
+        throw new Error(error);
       }
-    ),
+    }),
   },
 
   Mutation: {
-    signUp: async (parent, { input }, contex, info) => {
+    signUp: async (_, { input }) => {
       try {
         const user = await User.findOne({ email });
         if (user) {
@@ -41,13 +38,13 @@ module.exports = {
         return newUser;
       } catch (error) {
         console.log(error);
-        throw error;
+        throw new Error(error);
       }
     },
 
-    login: async (_, { input }, contex, info) => {
+    login: async (_, { input }) => {
       try {
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email: input.email });
         if (!user) {
           throw new ApolloError('User not found', 'NOT_FOUND');
         }
@@ -58,24 +55,24 @@ module.exports = {
         if (!isValidPassword) {
           throw new AuthenticationError('Incorrect Password');
         }
-        const token = jwt.sign({ id: user_id }, process.env.JWT_SECRET, {
-          expiresIn: '90d',
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+          expiresIn: '10d',
         });
         return { token };
       } catch (error) {
         console.log(error);
-        throw error;
+        throw new Error(error);
       }
     },
   },
 
   User: {
-    tasks: async (parent, args, contex, info) => {
+    tasks: async (parent, _, __) => {
       try {
         const tasks = await Task.find({ user: parent.id });
         return tasks;
       } catch (error) {
-        throw error;
+        throw new Error(error);
       }
     },
   },

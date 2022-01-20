@@ -6,10 +6,9 @@ const { isAuthenticated, isTaskOwner } = require('./middleware/authMiddleware');
 const { stringToBase64, base64ToString } = require('../utils/util');
 module.exports = {
   Query: {
-    greetings: () => 'Hellow world',
     tasks: combineResolvers(
       isAuthenticated,
-      async (parent, { cursor, limit = 10 }, { userId }, info) => {
+      async (_, { cursor, limit = 10 }, { userId }) => {
         try {
           const query = { user: userId };
           if (cursor) {
@@ -33,19 +32,19 @@ module.exports = {
             },
           };
         } catch (error) {
-          throw error;
+          throw new Error(error);
         }
       }
     ),
     task: combineResolvers(
       isAuthenticated,
       isTaskOwner,
-      async (parent, { input }, { userId }, info) => {
+      async (_, { input }, { userId }) => {
         try {
           const task = await Task.findById(input.id);
           return task;
         } catch (error) {
-          throw error;
+          throw new Error(error);
         }
       }
     ),
@@ -58,8 +57,8 @@ module.exports = {
         try {
           const task = await Task.create({ ...input, user: userId });
           return task;
-        } catch (err) {
-          throw err;
+        } catch (error) {
+          throw new Error(error);
         }
       }
     ),
@@ -75,8 +74,8 @@ module.exports = {
             { new: true }
           );
           return task;
-        } catch (err) {
-          throw err;
+        } catch (error) {
+          throw new Error(error);
         }
       }
     ),
@@ -88,22 +87,22 @@ module.exports = {
           const task = await Task.findByIdAndDelete(id);
           // await User.updateOne({ _id: userId }, { $pull: { tasks: tasks.id } });// if tasks exist in user schema
           return task;
-        } catch (err) {
-          throw err;
+        } catch (error) {
+          throw new Error(error);
         }
       }
     ),
   },
 
   Task: {
-    user: async (parent, { input }, { userId, loaders }, info) => {
+    user: async (_, __, { loaders }) => {
       try {
         // const user = await User.findById(parent.user);
         //converting object id into string
         const user = await loaders.user.load(parent.user.toString());
         return user;
       } catch (error) {
-        throw error;
+        throw new Error(error);
       }
     },
   },
